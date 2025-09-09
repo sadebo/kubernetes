@@ -1,0 +1,21 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+packages:
+  - curl
+write_files:
+  - path: /usr/local/bin/k3s-install.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      echo "🚀 Installing K3s master" | tee /var/log/k3s-install.log
+      curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --cluster-init --bind-address 0.0.0.0 --advertise-address ${master_ip} --tls-san ${master_ip}" sh - >> /var/log/k3s-install.log 2>&1
+      systemctl enable k3s
+      systemctl start k3s
+      until [ -f /etc/rancher/k3s/k3s.yaml ]; do
+        echo "⏳ Waiting for kubeconfig..." | tee -a /var/log/k3s-install.log
+        sleep 10
+      done
+      echo "✅ K3s master ready" | tee -a /var/log/k3s-install.log
+runcmd:
+  - /usr/local/bin/k3s-install.sh

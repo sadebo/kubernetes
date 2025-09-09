@@ -1,0 +1,7 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+runcmd:
+  - apt-get update && apt-get install -y sshpass
+  - TOKEN=$(ssh -o StrictHostKeyChecking=no -i /root/.ssh/authorized_keys root@${master_ip} "cat /var/lib/rancher/k3s/server/node-token")
+  - curl -sfL https://get.k3s.io | K3S_URL=https://${master_ip}:6443 K3S_TOKEN=$TOKEN sh -
